@@ -11,9 +11,19 @@ class Cell:
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.walls = [True, True, True, True]  # Up, Right, Bottom, Left
 
     def draw(self):
-        canvas.create_line(self.x, self.y, self.x + cell_size, self.y, fill="#1e2738", width=2)
+        if self.walls[0]:
+            canvas.create_line(self.x, self.y, self.x + cell_size, self.y, fill="#1e2738", width=2)
+        if self.walls[1]:
+            canvas.create_line(self.x + cell_size, self.y, self.x + cell_size, self.y + cell_size,
+                               fill="#1e2738", width=2)
+        if self.walls[2]:
+            canvas.create_line(self.x + cell_size, self.y + cell_size, self.x, self.y + cell_size,
+                               fill="#1e2738", width=2)
+        if self.walls[3]:
+            canvas.create_line(self.x, self.y + cell_size, self.x, self.y, fill="#1e2738", width=2)
 
 
 # Window initialization
