@@ -192,6 +192,10 @@ def generate_maze():
     arr = find_the_end(height, width)
     create_distractions(arr)
     draw_maze()
+    for c in arr:
+        while not c.drawn:
+            sleep(1)
+    highlight_solution(arr)
 
 
 class Cell:
@@ -201,6 +205,7 @@ class Cell:
         self.walls = [True, True, True, True]  # Up, Right, Bottom, Left
         self.visited = False
         self.border_width = 2
+        self.drawn = False
 
     def draw(self):
         if self.walls[0]:
@@ -231,20 +236,40 @@ class Cell:
             canvas.create_line(self.x, self.y + cell_size - self.border_width, self.x, self.y + self.border_width,
                                fill="#8b9fc4",
                                width=self.border_width)
+        self.drawn = True
 
     def highlight(self, switch):
-        self.border_width -= 1
         if switch == 1:  # Red highlight
-            canvas.create_rectangle(self.x + self.border_width, self.y + self.border_width, self.x + cell_size - self.border_width, self.y + cell_size - self.border_width,
+            canvas.create_rectangle(self.x + self.border_width, self.y + self.border_width,
+                                    self.x + cell_size - self.border_width, self.y + cell_size - self.border_width,
                                     fill='red', width=0)
-        elif switch == 2:  # Bright highlight
-            canvas.create_rectangle(self.x + self.border_width, self.y + self.border_width, self.x + cell_size - self.border_width, self.y + cell_size - self.border_width,
+        elif switch == 2:  # Dim highlight
+            self.border_width -= 1
+            canvas.create_rectangle(self.x + self.border_width, self.y + self.border_width,
+                                    self.x + cell_size - self.border_width, self.y + cell_size - self.border_width,
                                     fill='#9e5560', width=0)
+            if not self.walls[0]:
+                canvas.create_line(self.x + self.border_width, self.y, self.x + cell_size - self.border_width, self.y,
+                                   fill="#9e5560",
+                                   width=self.border_width+1)
+            if not self.walls[1]:
+                canvas.create_line(self.x + cell_size, self.y + self.border_width, self.x + cell_size,
+                                   self.y + cell_size - self.border_width,
+                                   fill="#9e5560", width=self.border_width+1)
+            if not self.walls[2]:
+                canvas.create_line(self.x + cell_size - self.border_width, self.y + cell_size,
+                                   self.x + self.border_width,
+                                   self.y + cell_size,
+                                   fill="#9e5560", width=self.border_width+1)
+            if not self.walls[3]:
+                canvas.create_line(self.x, self.y + cell_size - self.border_width, self.x, self.y + self.border_width,
+                                   fill="#9e5560",
+                                   width=self.border_width+1)
+            self.border_width += 1
         else:  # Remove highlight
             canvas.create_rectangle(self.x, self.y, self.x + cell_size, self.y + cell_size,
                                     fill='#8b9fc4', width=0)
             self.draw()
-        self.border_width += 1
 
 
 # Window initialization
