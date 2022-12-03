@@ -8,6 +8,7 @@ width = 800
 height = 800
 cell_size = 50
 grid = []
+n_cells_to_populate = (width // cell_size) * (height // cell_size)
 
 
 def is_valid(p, dir_):
@@ -60,6 +61,7 @@ def get_choices(p):
 
 
 def find_the_end(end_x, end_y):
+    global n_cells_to_populate
     def backtracked_walls(p, last_p):
         p_y = p.y // cell_size
         p_x = p.x // cell_size
@@ -79,7 +81,7 @@ def find_the_end(end_x, end_y):
     pointer.visited = True
     while not (pointer.y == end_y - cell_size and pointer.x == end_x - cell_size):
         # print(pointer.y, pointer.x)
-        sleep(0.01)
+        sleep(0.001)
         # Choose a random direction
         directions = get_choices(pointer)
         if len(directions):
@@ -87,6 +89,7 @@ def find_the_end(end_x, end_y):
 
             pointer.visited = True
             pointer_array.append(pointer)
+            n_cells_to_populate -= 1
             if direction == 0:
                 pointer = grid[pointer.y // cell_size - 1][pointer.x // cell_size]
                 pointer.walls = [pointer.walls[0], pointer.walls[1], False, pointer.walls[3]]
@@ -122,13 +125,14 @@ def find_the_end(end_x, end_y):
             pointer.highlight(0)
             pointer.walls = [True, True, True, True]
             pointer.draw()
+            n_cells_to_populate += 1
             l_pointer = pointer
             pointer = pointer_array[-1]
-            pointer.walls = backtracked_walls(pointer, l_pointer)
-            pointer.draw()
             # The problem is that the cell that it backtracks to will have its wall to the impossible cell already
             # set to invisible. Need a way to detect which direction the invisible square is from the cell and draw
             # back the wall.
+            pointer.walls = backtracked_walls(pointer, l_pointer)
+            pointer.draw()
             pointer_array[-1].highlight(0)
             pointer_array.pop(-1)
     print("FOUND THE END!!")
@@ -136,18 +140,17 @@ def find_the_end(end_x, end_y):
 
 
 def create_distractions(p_array):
-    n_cells_to_populate = (width // cell_size) * (height // cell_size)
+    global n_cells_to_populate
     for y in range(height // cell_size):
         for x in range(width // cell_size):
             grid[y][x].visited = False
             if grid[y][x] in p_array:
-                n_cells_to_populate -= 1
                 grid[y][x].visited = True
-    print(n_cells_to_populate)
     for path_cell in p_array:
         d_array = []
         pointer = path_cell
         while True:
+            sleep(0.001)
             choices = get_choices(pointer)
             print(choices, pointer.y // cell_size, pointer.x // cell_size)
             if len(choices):
