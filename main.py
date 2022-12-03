@@ -2,6 +2,7 @@ import random
 import threading
 import tkinter as tk
 from time import sleep
+from idlelib.tooltip import Hovertip
 
 # Global variables
 width = 800
@@ -9,6 +10,8 @@ height = 800
 cell_size = 20
 grid = []
 n_cells_to_populate = (width // cell_size) * (height // cell_size)
+solution = []
+shown = False
 
 
 def is_valid(p, dir_):
@@ -189,13 +192,15 @@ def draw_maze():
 
 
 def generate_maze():
+    global solution
     arr = find_the_end(height, width)
     create_distractions(arr)
     draw_maze()
     for c in arr:
         while not c.drawn:
             sleep(1)
-    highlight_solution(arr)
+    # highlight_solution(arr)
+    solution = arr
 
 
 class Cell:
@@ -293,5 +298,22 @@ for i in range(height // cell_size):
 
 thread = threading.Thread(target=generate_maze)
 thread.start()
+
+
+def show(event):
+    global shown
+    if event.keycode == 13:
+        if shown:
+            canvas.create_rectangle(0, 0, width, height, fill='#8b9fc4')
+            draw_maze()
+            shown = False
+        else:
+            highlight_solution(solution)
+            shown = True
+
+
+Hovertip(canvas, 'Press ENTER to show or hide the solution.', hover_delay=100)
+root.bind('<Key>', lambda event: show(event))
+
 
 root.mainloop()
