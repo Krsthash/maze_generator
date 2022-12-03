@@ -6,7 +6,7 @@ from time import sleep
 # Global variables
 width = 800
 height = 800
-cell_size = 50
+cell_size = 20
 grid = []
 n_cells_to_populate = (width // cell_size) * (height // cell_size)
 
@@ -62,6 +62,7 @@ def get_choices(p):
 
 def find_the_end(end_x, end_y):
     global n_cells_to_populate
+
     def backtracked_walls(p, last_p):
         p_y = p.y // cell_size
         p_x = p.x // cell_size
@@ -80,51 +81,40 @@ def find_the_end(end_x, end_y):
     pointer = grid[0][0]
     pointer.visited = True
     while not (pointer.y == end_y - cell_size and pointer.x == end_x - cell_size):
-        # print(pointer.y, pointer.x)
-        sleep(0.001)
         # Choose a random direction
         directions = get_choices(pointer)
         if len(directions):
             direction = directions[random.randint(0, len(directions) - 1)]
 
-            pointer.visited = True
+            # pointer.visited = True
             pointer_array.append(pointer)
             n_cells_to_populate -= 1
             if direction == 0:
                 pointer = grid[pointer.y // cell_size - 1][pointer.x // cell_size]
                 pointer.walls = [pointer.walls[0], pointer.walls[1], False, pointer.walls[3]]
-                pointer.draw()
                 pointer_array[-1].walls = [False, pointer_array[-1].walls[1], pointer_array[-1].walls[2],
                                            pointer_array[-1].walls[3]]
-                pointer_array[-1].draw()
             elif direction == 1:
                 pointer = grid[pointer.y // cell_size][pointer.x // cell_size + 1]
                 pointer.walls = [pointer.walls[0], pointer.walls[1], pointer.walls[2], False]
-                pointer.draw()
                 pointer_array[-1].walls = [pointer_array[-1].walls[0], False, pointer_array[-1].walls[2],
                                            pointer_array[-1].walls[3]]
-                pointer_array[-1].draw()
             elif direction == 2:
                 pointer = grid[pointer.y // cell_size + 1][pointer.x // cell_size]
                 pointer.walls = [False, pointer.walls[1], pointer.walls[2], pointer.walls[3]]
-                pointer.draw()
                 pointer_array[-1].walls = [pointer_array[-1].walls[0], pointer_array[-1].walls[1], False,
                                            pointer_array[-1].walls[3]]
-                pointer_array[-1].draw()
             elif direction == 3:
                 pointer = grid[pointer.y // cell_size][pointer.x // cell_size - 1]
                 pointer.walls = [pointer.walls[0], False, pointer.walls[2], pointer.walls[3]]
-                pointer.draw()
                 pointer_array[-1].walls = [pointer_array[-1].walls[0], pointer_array[-1].walls[1],
                                            pointer_array[-1].walls[2], False]
-                pointer_array[-1].draw()
             pointer.visited = True
             # pointer_array[-1].highlight(2)
             # pointer.highlight(1)
         else:
-            pointer.highlight(0)
+            # pointer.highlight(0)
             pointer.walls = [True, True, True, True]
-            pointer.draw()
             n_cells_to_populate += 1
             l_pointer = pointer
             pointer = pointer_array[-1]
@@ -132,15 +122,15 @@ def find_the_end(end_x, end_y):
             # set to invisible. Need a way to detect which direction the invisible square is from the cell and draw
             # back the wall.
             pointer.walls = backtracked_walls(pointer, l_pointer)
-            pointer.draw()
-            pointer_array[-1].highlight(0)
+            # pointer_array[-1].highlight(0)
             pointer_array.pop(-1)
-    print("FOUND THE END!!")
+    pointer_array.append(pointer)
     return pointer_array
 
 
 def create_distractions(p_array):
     global n_cells_to_populate
+
     for y in range(height // cell_size):
         for x in range(width // cell_size):
             grid[y][x].visited = False
@@ -150,9 +140,7 @@ def create_distractions(p_array):
         d_array = []
         pointer = path_cell
         while True:
-            sleep(0.001)
             choices = get_choices(pointer)
-            print(choices, pointer.y // cell_size, pointer.x // cell_size)
             if len(choices):
                 direction = choices[random.randint(0, len(choices) - 1)]
 
@@ -163,27 +151,19 @@ def create_distractions(p_array):
                 if direction == 0:
                     pointer = grid[pointer.y // cell_size - 1][pointer.x // cell_size]
                     pointer.walls = [pointer.walls[0], pointer.walls[1], False, pointer.walls[3]]
-                    pointer.draw()
                     d_array[-1].walls = [False, d_array[-1].walls[1], d_array[-1].walls[2], d_array[-1].walls[3]]
-                    d_array[-1].draw()
                 elif direction == 1:
                     pointer = grid[pointer.y // cell_size][pointer.x // cell_size + 1]
                     pointer.walls = [pointer.walls[0], pointer.walls[1], pointer.walls[2], False]
-                    pointer.draw()
                     d_array[-1].walls = [d_array[-1].walls[0], False, d_array[-1].walls[2], d_array[-1].walls[3]]
-                    d_array[-1].draw()
                 elif direction == 2:
                     pointer = grid[pointer.y // cell_size + 1][pointer.x // cell_size]
                     pointer.walls = [False, pointer.walls[1], pointer.walls[2], pointer.walls[3]]
-                    pointer.draw()
                     d_array[-1].walls = [d_array[-1].walls[0], d_array[-1].walls[1], False, d_array[-1].walls[3]]
-                    d_array[-1].draw()
                 elif direction == 3:
                     pointer = grid[pointer.y // cell_size][pointer.x // cell_size - 1]
                     pointer.walls = [pointer.walls[0], False, pointer.walls[2], pointer.walls[3]]
-                    pointer.draw()
                     d_array[-1].walls = [d_array[-1].walls[0], d_array[-1].walls[1], d_array[-1].walls[2], False]
-                    d_array[-1].draw()
                 pointer.visited = True
             else:
                 if pointer == path_cell:
@@ -191,13 +171,27 @@ def create_distractions(p_array):
                 else:
                     pointer = d_array[-1]
                     d_array.pop(-1)
-    print(n_cells_to_populate)
+
+
+def highlight_solution(sol_array):
+    for cell_ in sol_array:
+        threading.Thread(target=lambda: cell_.highlight(2)).start()
+
+
+def draw_maze():
+    def draw_row(y_):
+        # Optimisation for printing multiple rows at the same time in different threads
+        for x_ in range(len(grid[y_])):
+            grid[y_][x_].draw()
+
+    for y in range(len(grid)):
+        threading.Thread(target=lambda: draw_row(y)).start()
 
 
 def generate_maze():
-    print("Generating the maze...")
     arr = find_the_end(height, width)
     create_distractions(arr)
+    draw_maze()
 
 
 class Cell:
@@ -206,40 +200,51 @@ class Cell:
         self.y = y
         self.walls = [True, True, True, True]  # Up, Right, Bottom, Left
         self.visited = False
+        self.border_width = 2
 
     def draw(self):
         if self.walls[0]:
-            canvas.create_line(self.x, self.y, self.x + cell_size, self.y, fill="#1e2738", width=2)
+            canvas.create_line(self.x, self.y, self.x + cell_size, self.y, fill="#1e2738",
+                               width=self.border_width)
         else:
-            canvas.create_line(self.x, self.y, self.x + cell_size, self.y, fill="#8b9fc4", width=2)
+            canvas.create_line(self.x + self.border_width, self.y, self.x + cell_size - self.border_width, self.y,
+                               fill="#8b9fc4",
+                               width=self.border_width)
         if self.walls[1]:
             canvas.create_line(self.x + cell_size, self.y, self.x + cell_size, self.y + cell_size,
-                               fill="#1e2738", width=2)
+                               fill="#1e2738", width=self.border_width)
         else:
-            canvas.create_line(self.x + cell_size, self.y, self.x + cell_size, self.y + cell_size,
-                               fill="#8b9fc4", width=2)
+            canvas.create_line(self.x + cell_size, self.y + self.border_width, self.x + cell_size,
+                               self.y + cell_size - self.border_width,
+                               fill="#8b9fc4", width=self.border_width)
         if self.walls[2]:
             canvas.create_line(self.x + cell_size, self.y + cell_size, self.x, self.y + cell_size,
-                               fill="#1e2738", width=2)
+                               fill="#1e2738", width=self.border_width)
         else:
-            canvas.create_line(self.x + cell_size, self.y + cell_size, self.x, self.y + cell_size,
-                               fill="#8b9fc4", width=2)
+            canvas.create_line(self.x + cell_size - self.border_width, self.y + cell_size, self.x + self.border_width,
+                               self.y + cell_size,
+                               fill="#8b9fc4", width=self.border_width)
         if self.walls[3]:
-            canvas.create_line(self.x, self.y + cell_size, self.x, self.y, fill="#1e2738", width=2)
+            canvas.create_line(self.x, self.y + cell_size, self.x, self.y, fill="#1e2738",
+                               width=self.border_width)
         else:
-            canvas.create_line(self.x, self.y + cell_size, self.x, self.y, fill="#8b9fc4", width=2)
+            canvas.create_line(self.x, self.y + cell_size - self.border_width, self.x, self.y + self.border_width,
+                               fill="#8b9fc4",
+                               width=self.border_width)
 
     def highlight(self, switch):
+        self.border_width -= 1
         if switch == 1:  # Red highlight
-            canvas.create_rectangle(self.x + 1, self.y + 1, self.x + cell_size - 1, self.y + cell_size - 1,
+            canvas.create_rectangle(self.x + self.border_width, self.y + self.border_width, self.x + cell_size - self.border_width, self.y + cell_size - self.border_width,
                                     fill='red', width=0)
         elif switch == 2:  # Bright highlight
-            canvas.create_rectangle(self.x + 1, self.y + 1, self.x + cell_size - 1, self.y + cell_size - 1,
+            canvas.create_rectangle(self.x + self.border_width, self.y + self.border_width, self.x + cell_size - self.border_width, self.y + cell_size - self.border_width,
                                     fill='#9e5560', width=0)
         else:  # Remove highlight
-            canvas.create_rectangle(self.x + 1, self.y + 1, self.x + cell_size - 1, self.y + cell_size - 1,
+            canvas.create_rectangle(self.x, self.y, self.x + cell_size, self.y + cell_size,
                                     fill='#8b9fc4', width=0)
             self.draw()
+        self.border_width += 1
 
 
 # Window initialization
@@ -259,8 +264,6 @@ for i in range(height // cell_size):
     for j in range(width // cell_size):
         cell = Cell(j * cell_size, i * cell_size)
         row.append(cell)
-        # Draw cells to the canvas
-        cell.draw()
     grid.append(row)
 
 thread = threading.Thread(target=generate_maze)
